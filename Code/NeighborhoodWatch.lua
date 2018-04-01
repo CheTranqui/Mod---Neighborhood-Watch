@@ -1,4 +1,4 @@
-function OnMsg.NewHour() -- in the final release this will be "OnMsg.NewDay()"
+function OnMsg.NewDay() -- in the final release this will be "OnMsg.NewDay()"
 	NWVariableSweep()
 	NWMainNotification()
 end
@@ -73,6 +73,7 @@ function NWTrackVIPColonistCheck()
 	if IsKindOfClasses(SelectedObj, "Colonist") then  -- probes object to confirm that a colonist is selected
 -- need to check the table here to make sure that the selected colonist is not already accounted for in the table
 		NWTempVIP = SelectedObj
+		NWVIP = NWTempVIP
 		NWTempVIPName = NWTempVIP.name  -- borrows colonist name
 		NWTrackVIPTempText = T{"Add selected colonist (<NWNewVIPName>) as VIP", NWNewVIPName = NWTempVIPName}
 	else
@@ -245,7 +246,7 @@ function NWGetVIPStats()
 			if NWVIP.workplace == false then
 				NWVIPWorkDeclared = "Job: unemployed."
 			else
-				NWVIPWorkDeclared = T{"Job:  Shift <NWVIPWorkShift> at the local <NWVIPWorkBuilding>.", NWVIPWorkShift = NWVIP.workplace_shift, NWVIPWorkBuilding = NWVIP.workplace.palette}
+				NWVIPWorkDeclared = T{"Job:  Shift <NWVIPWorkShift> at the <NWVIPWorkBuilding>.", NWVIPWorkShift = NWVIP.workplace_shift, NWVIPWorkBuilding = NWVIP.workplace.palette}
 			end
 
 		else -- NWLivingVIPs == false
@@ -418,12 +419,13 @@ function NWObituariesPopup2()
 end -- function end
 
 function NWRevokeVIPPopup()
+	NWVIP = NWTempVIP
 	CreateRealTimeThread(function()
 		Sleep(5)
         params = {
 			title = T{"VIP Management:"},
             text = T{"Choose from the options below to remove VIP status from individuals or from the records on a whole."},
-            choice1 = T{"Removes this colonist () from the list of VIPs"}, -- view and select each vip in order
+            choice1 = T{"Removes this colonist (<PotentialVIPNameCheck>) from the list of VIPs", PotentialVIPNameCheck = NWVIP.name}, -- view and select each vip in order
             choice2 = T{"Reset list of VIPs only (leave the records of the dead)"},
 			choice3 = T{"Reset both the lists of living VIPs and Honored Fallen"},
 			choice4 = T{"Close"},
@@ -444,16 +446,15 @@ function NWRevokeVIPPopup()
 end -- function end
 
 function NWRevokeOneVIP()
-	if g_NWVIPList[1] ~= nil then
-		for k, v in ipairs(g_NWVIPList) do
-			if v == NWVIP then
-				table.remove(g_NWVIPList, k)
-				NWRevokeVIPNotification()
-			break
-			end
+	for k, v in ipairs(g_NWVIPList) do
+		if v == NWVIP then
+			table.remove(g_NWVIPList, k)
+			NWRevokeVIPNotification()
+		break
 		end
 	end
 end
+
 
 function NWRevokeVIPNotification()
 	NW_mod_dir = Mods["gzhD4pQ"]:GetModRootPath()
@@ -543,8 +544,11 @@ end
 
 function NWShowThisColonistInfo()
 	NWVIP = NWTempVIP
+	NWLivingVIPs = true
 	if NWGetThisColonistStats == "VIP not yet declared" then
 		NWGetThisColonistStats = "No colonist selected"
+	else
+	NWGetThisColonistStats = NWGetVIPStats()
 	end
 	if NWTempVIPName == nil then 
 		NWImportTrackVIPC1Text = "Select a colonist to add them as a VIP"
@@ -553,7 +557,6 @@ function NWShowThisColonistInfo()
 		NWImportTrackVIPC1Text = NWTrackVIPTempText
 		NWShowThisColRenameCheck = "Rename selected colonist"
 	end
-	NWGetThisColonistStats = NWGetVIPStats()
 	CreateRealTimeThread(function()
        params = {
 			title = T{"A Potential VIP:"},
@@ -589,17 +592,19 @@ end
 
 function NWTrackVIPAdd()
 	if g_NWVIPList[1] == nil then
-		table.insert(g_NWVIPList, NWTempVIP)
+		g_NWVIPList = {}
+		table.insert(g_NWVIPList, NWVIP)
+		NWConfirmAddition()
 	else
 		for k, v in ipairs(g_NWVIPList) do
-			if v == NWTempVIP then
+			if v == NWVIP then
 				NWConfirmExisting()
 				NWFoundPotentialVIP = true
 			break
 			end
 		end
 		if NWFoundPotentialVIP == false then
-			table.insert(g_NWVIPList, NWTempVIP)
+			table.insert(g_NWVIPList, NWVIP)
 			NWConfirmAddition()
 		end
 		NWFoundPotentialVIP = false
