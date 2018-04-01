@@ -69,7 +69,6 @@ function NWMainNotification()
 	end)
 end
 
-
 function NWTrackVIPColonistCheck()
 	if IsKindOfClasses(SelectedObj, "Colonist") then  -- probes object to confirm that a colonist is selected
 -- need to check the table here to make sure that the selected colonist is not already accounted for in the table
@@ -273,6 +272,7 @@ end
 
 
 function NWTrackVIPPopup()
+	Sleep(5)
 	IncomingListKey = NWListKey
 	NWLivingVIPs = true
 	NWCheckForEmptyList()
@@ -305,11 +305,13 @@ function NWTrackVIPPopup()
 end -- function end
 
 function NWTrackVIPPopup2()
+	Sleep(5)
 	IncomingListKey = NWListKey
 	NWLivingVIPs = true
 	NWCheckForEmptyList()
 	NWFirstFourVIPImport = NWGetVIPPopupString()
 	CreateRealTimeThread(function()
+		Sleep(5)
         params = {
 			title = T{"VIP Management"},
             text = T{"Martian VIPs:  <newline> <NWFirstFourVIPs>", NWFirstFourVIPs = NWFirstFourVIPImport}, -- displays up to 5 VIPs' info
@@ -357,12 +359,14 @@ function NWObituariesPopup()
 	NWCheckForEmptyList()
 	NWFirstFourVIPImport = NWGetVIPPopupString()
 	CreateRealTimeThread(function()
+		Sleep(5)
         params = {
 			title = T{"Martian Historical Records"},
             text = T{"The Honored Fallen:  <newline> <NWFirstFourVIPs>", NWFirstFourVIPs = NWFirstFourVIPImport}, -- displays up to 5 dead VIPs info
             choice1 = T{"Show Next Page of Fallen Martians"}, -- view and select each vip in order
             choice2 = T{"View List of Current VIPs"},
-			choice3 = T{"Close"},
+			choice3 = T{"Revoke VIP Status and Clear Lists"},
+			choice4 = T{"Close"},
             image = "UI/Messages/research.tga",
         } -- params
         local choice = WaitPopupNotification(false, params)
@@ -374,6 +378,8 @@ function NWObituariesPopup()
 			NWListKey = 1
 			NWTrackVIPPopup()  -- opens up first page of living VIPs
 		elseif choice == 3 then
+			NWRevokeVIPPopup()
+		elseif choice == 4 then
 			NWVariableSweep()  -- closes window, frees up variables
         end -- if statement
     end ) -- CreateRealTimeThread
@@ -385,12 +391,14 @@ function NWObituariesPopup2()
 	NWCheckForEmptyList()
 	NWFirstFourVIPImport = NWGetVIPPopupString()
 	CreateRealTimeThread(function()
+		Sleep(5)
         params = {
 			title = T{"Martian Historical Records"},
             text = T{"The Honored Fallen:  <newline> <NWFirstFourVIPs>", NWFirstFourVIPs = NWFirstFourVIPImport}, -- displays up to 5 dead VIPs info
             choice1 = T{"Show Next Page of Fallen Martians"}, -- view and select each vip in order
             choice2 = T{"View List of Current VIPs"},
-			choice3 = T{"Close"},
+			choice3 = T{"Revoke VIP Status and Clear Lists"},
+			choice4 = T{"Close"},
             image = "UI/Messages/research.tga",
         } -- params
         local choice = WaitPopupNotification(false, params)
@@ -402,10 +410,99 @@ function NWObituariesPopup2()
 			NWListKey = 1
 			NWTrackVIPPopup()  -- opens up first page of living VIPs
 		elseif choice == 3 then
+			NWRevokeVIPPopup()
+		elseif choice == 4 then
 			NWVariableSweep()  -- closes window, frees up variables
         end -- if statement
     end ) -- CreateRealTimeThread
 end -- function end
+
+function NWRevokeVIPPopup()
+	CreateRealTimeThread(function()
+		Sleep(5)
+        params = {
+			title = T{"VIP Management:"},
+            text = T{"Choose from the options below to remove VIP status from individuals or from the records on a whole."},
+            choice1 = T{"Removes this colonist () from the list of VIPs"}, -- view and select each vip in order
+            choice2 = T{"Reset list of VIPs only (leave the records of the dead)"},
+			choice3 = T{"Reset both the lists of living VIPs and Honored Fallen"},
+			choice4 = T{"Close"},
+            image = "UI/Messages/research.tga",
+        } -- params
+        local choice = WaitPopupNotification(false, params)
+        if choice == 1 then
+			NWRevokeOneVIP()  -- opens next page of deaders
+		elseif choice == 2 then
+			NWRevokeAllVIP()  -- opens up first page of living VIPs
+		elseif choice == 3 then
+			NWRevokeAllVIP()
+			NWRevokeDeaders()
+		elseif choice == 4 then
+			NWVariableSweep()  -- closes window, frees up variables
+        end -- if statement
+    end ) -- CreateRealTimeThread
+end -- function end
+
+function NWRevokeOneVIP()
+	if g_NWVIPList[1] ~= nil then
+		for k, v in ipairs(g_NWVIPList) do
+			if v == NWVIP then
+				table.remove(g_NWVIPList, k)
+				NWRevokeVIPNotification()
+			break
+			end
+		end
+	end
+end
+
+function NWRevokeVIPNotification()
+	NW_mod_dir = Mods["gzhD4pQ"]:GetModRootPath()
+	CreateRealTimeThread(function()
+		AddCustomOnScreenNotification("NWRevokeVIPNotification",
+			T{"VIP status has been revoked"},
+			T{"<NWRevokedVIPName> is no longer a VIP"},
+			NW_mod_dir.."UI/NWVIPNotificationIcon.tga",
+			false,
+			{   NWRevokedVIPName = NWVIP.name,
+				expiration = 50000,
+				priority = "Normal",
+			})
+	end)
+end
+
+function NWRevokeAllVIP()
+	for k in pairs (g_NWVIPList) do
+		g_NWVIPList[k] = nil
+	end
+	NWRevokeListDone = "VIP List has"
+	NWRevokeAllConfirmation()
+	NWVariableSweep()
+end
+
+function NWRevokeAllConfirmation()
+	NW_mod_dir = Mods["gzhD4pQ"]:GetModRootPath()
+	CreateRealTimeThread(function()
+		AddCustomOnScreenNotification("NWTrackVIP",
+			T{"Neighborhood Watch"},
+			T{"<NWRevokeListConfirmation> been reset"},
+			NW_mod_dir.."UI/NWVIPNotificationIcon.tga",
+			NWTrackVIPColonistCheck,
+			{
+				NWRevokeListConfirmation = NWRevokeListDone,
+				expiration = 10000,
+				priority = "Normal",
+			})
+	end)
+end
+
+function NWRevokeDeaders()
+	for k in pairs (g_NWDeaderList) do
+		g_NWDeaderList[k] = nil
+	end
+	NWRevokeListDone = "Both lists have"
+	NWRevokeAllConfirmation()
+	NWVariableSweep()
+end
 
 function NWZoomIndexer()
 	if NWZoomIndex == 2 then
@@ -446,7 +543,6 @@ end
 
 function NWShowThisColonistInfo()
 	NWVIP = NWTempVIP
-	NWGetThisColonistStats = NWGetVIPStats()
 	if NWGetThisColonistStats == "VIP not yet declared" then
 		NWGetThisColonistStats = "No colonist selected"
 	end
@@ -457,6 +553,7 @@ function NWShowThisColonistInfo()
 		NWImportTrackVIPC1Text = NWTrackVIPTempText
 		NWShowThisColRenameCheck = "Rename selected colonist"
 	end
+	NWGetThisColonistStats = NWGetVIPStats()
 	CreateRealTimeThread(function()
        params = {
 			title = T{"A Potential VIP:"},
@@ -490,11 +587,6 @@ function NWRenameChosenColonist()
 	NWVIP:ShowRenameUI()
 end
 
-function NWShowNextFourVIPs()
-	NWTestVar = "Testing, NWShowNextFourVIPs"
-	return NWTestVar
-end
-
 function NWTrackVIPAdd()
 	if g_NWVIPList[1] == nil then
 		table.insert(g_NWVIPList, NWTempVIP)
@@ -502,12 +594,15 @@ function NWTrackVIPAdd()
 		for k, v in ipairs(g_NWVIPList) do
 			if v == NWTempVIP then
 				NWConfirmExisting()
-			else
-				table.insert(g_NWVIPList, NWTempVIP)
-				NWConfirmAddition()
+				NWFoundPotentialVIP = true
 			break
 			end
 		end
+		if NWFoundPotentialVIP == false then
+			table.insert(g_NWVIPList, NWTempVIP)
+			NWConfirmAddition()
+		end
+		NWFoundPotentialVIP = false
 	end
 end
 
@@ -568,6 +663,17 @@ function NWVariableSweep()
 	NWVIPAge = nil
 	NWVIPName = nil
 	NWListKey = 0
+	NWVIP1 = nil
+	NWVIP2 = nil
+	NWVIP3 = nil
+	NWVIP4 = nil
+	NWVIP5 = nil
+	NWVIPInfoString = nil
+	NWPopupLine1 = nil
+	NWPopupLine2 = nil
+	NWPopupLine3 = nil
+	NWPopupLine4 = nil
+	NWPopupLine5 = nil	
 end
 
 function OnMsg.PersistSave(data)
