@@ -1,8 +1,8 @@
 NBWatch = {}
 NBWatch.StringIDBase = 987234920
 
-function OnMsg.NewHour()
---function OnMsg.NewDay() -- in the final release this will be "OnMsg.NewDay()"
+-- function OnMsg.NewHour()
+function OnMsg.NewDay() -- in the final release this will be "OnMsg.NewDay()"
 	NWVariableSweep()
 	NWMainNotification()
 end
