@@ -5,10 +5,10 @@ return PlaceObj('ModDef', {
 	'id', "gzhD4pQ",
 	'steam_id', "1347609567",
 	'author', "CheTranqui",
-	'version', 265,
+	'version', 294,
 	'lua_revision', 228184,
 	'code', {
 		"Code/NeighborhoodWatch.lua",
 	},
-	'saved', 1522562816,
+	'saved', 1522705504,
 })

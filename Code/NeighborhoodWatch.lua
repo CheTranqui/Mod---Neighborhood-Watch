@@ -1,4 +1,8 @@
-function OnMsg.NewDay() -- in the final release this will be "OnMsg.NewDay()"
+NBWatch = {}
+NBWatch.StringIDBase = 987234920
+
+function OnMsg.NewHour()
+--function OnMsg.NewDay() -- in the final release this will be "OnMsg.NewDay()"
 	NWVariableSweep()
 	NWMainNotification()
 end
@@ -32,14 +36,16 @@ end
 
 function NWVIPDeathNotification()
 	if NWDeaderReason == "StatusEffect_Suffocating_Outside" then
-		NWDeaderReasonChange = "Suffocation"
+		NWDeaderReasonChange = T{NBWatch.StringIDBase + 1, "Suffocation"}
+	elseif NWDeaderReason == "StatusEffect_Suffocating" then
+		NWDeaderReasonChange = T{NBWatch.StringIDBase + 1, "Suffocation"}		
 	else
 		NWDeaderReasonChange = NWDeader.dying_reason
 	end
 	CreateRealTimeThread(function()
 		AddCustomOnScreenNotification("NWVIPDeathNotice",
-			T{"VIP has died!"},
-			T{"<NWDeaderName> has died of <NWDeaderReason>"},
+			T{NBWatch.StringIDBase + 2, "VIP has died!"},
+			T{NBWatch.StringIDBase + 3, "<NWDeaderName> has died of <NWDeaderReason>"},
 			"UI/Icons/Notifications/placeholder_2.tga",
 			NWVIPCenterOnDeader,
 			{   NWDeaderName = NWDeader.name,
@@ -58,8 +64,8 @@ function NWMainNotification()
 	NW_mod_dir = Mods["gzhD4pQ"]:GetModRootPath()
 	CreateRealTimeThread(function()
 		AddCustomOnScreenNotification("NWTrackVIP",
-			T{"Neighborhood Watch"},
-			T{"Click here to manage VIPs"},
+			T{NBWatch.StringIDBase + 4, "Neighborhood Watch"},
+			T{NBWatch.StringIDBase + 5, "Click here to manage VIPs"},
 			NW_mod_dir.."UI/NWVIPNotificationIcon.tga",
 			NWTrackVIPColonistCheck,
 			{
@@ -72,12 +78,14 @@ end
 function NWTrackVIPColonistCheck()
 	if IsKindOfClasses(SelectedObj, "Colonist") then  -- probes object to confirm that a colonist is selected
 -- need to check the table here to make sure that the selected colonist is not already accounted for in the table
+		NWColonistSelected = true
 		NWTempVIP = SelectedObj
 		NWVIP = NWTempVIP
 		NWTempVIPName = NWTempVIP.name  -- borrows colonist name
-		NWTrackVIPTempText = T{"Add selected colonist (<NWNewVIPName>) as VIP", NWNewVIPName = NWTempVIPName}
+		NWTrackVIPTempText = T{NBWatch.StringIDBase + 6, "Add selected colonist (<NWNewVIPName>) as VIP", NWNewVIPName = NWTempVIPName}
 	else
-		NWTrackVIPTempText = "Cannot award VIP status:   No colonist selected"
+		NWColonistSelected = false
+		NWTrackVIPTempText = T{NBWatch.StringIDBase + 7, "Cannot award VIP status:   No colonist selected"}
 		NWTempVIP = nil
 		NWTempVIPName = nil
 	end  -- if statement
@@ -88,7 +96,7 @@ function NWCheckForEmptyList()
 	if NWLivingVIPs == true then
 		if g_NWVIPList == nil then
 			g_NWVIPList = {}
-			NWPopupLine1 = "No VIPs yet declared <newline>"
+			NWPopupLine1 = T{NBWatch.StringIDBase + 8, "No VIPs yet declared <newline>"}
 			NWPopupLine2 = "<newline>"
 			NWPopupLine3 = "<newline>"
 			NWPopupLine4 = "<newline>"
@@ -99,7 +107,7 @@ function NWCheckForEmptyList()
 	else -- if NWLivingVIPs == false
 		if g_NWDeaderList == nil then
 			g_NWDeaderList = {}
-			NWPopupLine1 = "No VIPs have yet fallen <newline>"
+			NWPopupLine1 = T{NBWatch.StringIDBase + 9, "No VIPs have yet fallen <newline>"}
 			NWPopupLine2 = "<newline>"
 			NWPopupLine3 = "<newline>"
 			NWPopupLine4 = "<newline>"
@@ -118,7 +126,7 @@ function NWGetFirstVIP()
 			NWVIP1 = NWVIP
 			NWPopupLine1 = NWGetVIPStats()
 		else
-			NWPopupLine1 = "VIP not yet declared <newline>"
+			NWPopupLine1 = T{NBWatch.StringIDBase + 10, "VIP not yet declared <newline>"}
 		end
 	else
 		if g_NWDeaderList[NWNewListKey] ~= nil then
@@ -126,7 +134,7 @@ function NWGetFirstVIP()
 			NWVIP1 = NWVIP
 			NWPopupLine1 = NWGetVIPStats()
 		else
-			NWPopupLine1 = "No fallen VIP to honor <newline>"
+			NWPopupLine1 = T{NBWatch.StringIDBase + 11, "No fallen VIP to honor <newline>"}
 		end
 	end
 	NWGetSecondVIP()
@@ -233,40 +241,40 @@ end
 
 function NWGetVIPStats()
 	if NWVIP == nil then
-	NWVIPInfoString = "VIP not yet declared"
+	NWVIPInfoString = T{NBWatch.StringIDBase + 12, "VIP not yet declared"}
 	else
 		if NWLivingVIPs == true then
-			NWAgeCheck = "Age:"
+			NWAgeCheck = T{NBWatch.StringIDBase + 13, "Age:"}
 			NWVIPAgeDeclared = NWVIP.age
 			if NWVIP.dome == false then
-				NWVIPDomeDeclared = "is domeless."
+				NWVIPDomeDeclared = T{NBWatch.StringIDBase + 14, "is domeless."}
 			else
-				NWVIPDomeDeclared = T{"lives in <NWVIPDomeHome>.", NWVIPDomeHome = NWVIP.dome.name}
+				NWVIPDomeDeclared = T{NBWatch.StringIDBase + 15, "lives in <NWVIPDomeHome>.", NWVIPDomeHome = NWVIP.dome.name}
 			end
 			if NWVIP.workplace == false then
-				NWVIPWorkDeclared = "Job: unemployed."
+				NWVIPWorkDeclared = T{NBWatch.StringIDBase + 16, "Job: unemployed."}
 			else
-				NWVIPWorkDeclared = T{"Job:  Shift <NWVIPWorkShift> at the <NWVIPWorkBuilding>.", NWVIPWorkShift = NWVIP.workplace_shift, NWVIPWorkBuilding = NWVIP.workplace.palette}
+				NWVIPWorkDeclared = T{NBWatch.StringIDBase + 17, "Job: <NWVIPWorkBuilding>.", NWVIPWorkBuilding = NWVIP.workplace.entity}
 			end
 
 		else -- NWLivingVIPs == false
 			if NWVIP.age > NWVIP.death_age or NWVIP.age == NWVIP.death_age or NWVIP.dying == true then
-				NWAgeCheck = "died at age:"
+				NWAgeCheck = T{NBWatch.StringIDBase + 18, "died at age:"}
 				if NWVIP.dying_reason == "StatusEffect_Suffocating_Outside" then
-					NWDeadReasonChange = "Suffocation"
+					NWDeadReasonChange = T{NBWatch.StringIDBase + 1, "Suffocation"}
 				else
 					NWDeadReasonChange = NWVIP.dying_reason
 				end
-			NWVIPAgeDeclared = T{"<NWDeadAge> of <NWDeadReason>", NWDeadAge = NWVIP.death_age, NWDeadReason = NWDeadReasonChange}
+			NWVIPAgeDeclared = T{NBWatch.StringIDBase + 19, "<NWDeadAge> of <NWDeadReason>", NWDeadAge = NWVIP.death_age, NWDeadReason = NWDeadReasonChange}
 			elseif NWVIP.age == NWVIP.death_age then
-				NWAgeCheck = "died at age:"
+				NWAgeCheck = T{NBWatch.StringIDBase + 18, "died at age:"}
 				NWVIPAgeDeclared = NWVIP.death_age
 			end
 			NWVIPWorkDeclared = ""
 			NWVIPDomeDeclared = ""
 		end
 	NWVIPSpecDeclared = NWVIP.specialist
-	NWVIPInfoString = T{"<newline><newline> <NWVIPName> <NWVIPDome>  <NWVIPWork>  <NWAge> <NWVIPAge>. Spec: <NWVIPSpec>.", NWVIPName = NWVIP.name, NWVIPDome = NWVIPDomeDeclared, NWVIPWork = NWVIPWorkDeclared, NWAge = NWAgeCheck, NWVIPAge = NWVIPAgeDeclared, NWVIPSpec = NWVIPSpecDeclared}
+	NWVIPInfoString = T{NBWatch.StringIDBase + 20, "<newline><newline> <NWVIPName> <NWVIPDome>  <NWVIPWork>  <NWAge> <NWVIPAge>. Spec: <NWVIPSpec>.", NWVIPName = NWVIP.name, NWVIPDome = NWVIPDomeDeclared, NWVIPWork = NWVIPWorkDeclared, NWAge = NWAgeCheck, NWVIPAge = NWVIPAgeDeclared, NWVIPSpec = NWVIPSpecDeclared}
 	end
 	return NWVIPInfoString
 end
@@ -280,13 +288,13 @@ function NWTrackVIPPopup()
 	NWFirstFourVIPImport = NWGetVIPPopupString()
 	CreateRealTimeThread(function()
         params = {
-			title = T{"VIP Management"},
-            text = T{"Martian VIPs:  <newline> <NWFirstFourVIPs>", NWFirstFourVIPs = NWFirstFourVIPImport}, -- displays up to 5 VIPs' info
-            choice1 = T{"Cycle through these VIPs"}, -- view and select each vip in order
-            choice2 = T{"Show Next Page of VIPs"},
-			choice3 = T{"View Records of the Honored Fallen"},
-			choice4 = T{"Close"},
-            image = "UI/Messages/research.tga",
+			title = T{NBWatch.StringIDBase + 21, "VIP Management"},
+            text = T{NBWatch.StringIDBase + 22, "Martian VIPs:  <newline> <NWFirstFourVIPs>", NWFirstFourVIPs = NWFirstFourVIPImport}, -- displays up to 5 VIPs' info
+            choice1 = T{NBWatch.StringIDBase + 23, "Cycle through these VIPs"}, -- view and select each vip in order
+            choice2 = T{NBWatch.StringIDBase + 24, "Show Next Page of VIPs"},
+			choice3 = T{NBWatch.StringIDBase + 25, "View Records of the Honored Fallen"},
+			choice4 = T{NBWatch.StringIDBase + 26, "Close"},
+            image = "UI/Messages/colonists.tga",
         } -- params
         local choice = WaitPopupNotification(false, params)
         if choice == 1 then
@@ -314,13 +322,13 @@ function NWTrackVIPPopup2()
 	CreateRealTimeThread(function()
 		Sleep(5)
         params = {
-			title = T{"VIP Management"},
-            text = T{"Martian VIPs:  <newline> <NWFirstFourVIPs>", NWFirstFourVIPs = NWFirstFourVIPImport}, -- displays up to 5 VIPs' info
-            choice1 = T{"Cycle through these VIPs"}, -- view and select each vip in order
-            choice2 = T{"Show Next Page of VIPs"},
-			choice3 = T{"View Records of the Honored Fallen"},
-			choice4 = T{"Close"},
-            image = "UI/Messages/research.tga",
+			title = T{NBWatch.StringIDBase + 21, "VIP Management"},
+            text = T{NBWatch.StringIDBase + 22, "Martian VIPs:  <newline> <NWFirstFourVIPs>", NWFirstFourVIPs = NWFirstFourVIPImport}, -- displays up to 5 VIPs' info
+            choice1 = T{NBWatch.StringIDBase + 23, "Cycle through these VIPs"}, -- view and select each vip in order
+            choice2 = T{NBWatch.StringIDBase + 24, "Show Next Page of VIPs"},
+			choice3 = T{NBWatch.StringIDBase + 25, "View Records of the Honored Fallen"},
+			choice4 = T{NBWatch.StringIDBase + 26, "Close"},
+            image = "UI/Messages/colonists.tga",
         } -- params
         local choice = WaitPopupNotification(false, params)
         if choice == 1 then
@@ -362,13 +370,13 @@ function NWObituariesPopup()
 	CreateRealTimeThread(function()
 		Sleep(5)
         params = {
-			title = T{"Martian Historical Records"},
-            text = T{"The Honored Fallen:  <newline> <NWFirstFourVIPs>", NWFirstFourVIPs = NWFirstFourVIPImport}, -- displays up to 5 dead VIPs info
-            choice1 = T{"Show Next Page of Fallen Martians"}, -- view and select each vip in order
-            choice2 = T{"View List of Current VIPs"},
-			choice3 = T{"Revoke VIP Status and Clear Lists"},
-			choice4 = T{"Close"},
-            image = "UI/Messages/research.tga",
+			title = T{NBWatch.StringIDBase + 27, "Martian Historical Records"},
+            text = T{NBWatch.StringIDBase + 28, "The Honored Fallen:  <newline> <NWFirstFourVIPs>", NWFirstFourVIPs = NWFirstFourVIPImport}, -- displays up to 5 dead VIPs info
+            choice1 = T{NBWatch.StringIDBase + 29, "Show Next Page of Fallen Martians"}, -- view and select each vip in order
+            choice2 = T{NBWatch.StringIDBase + 30, "View List of Current VIPs"},
+			choice3 = T{NBWatch.StringIDBase + 31, "Revoke VIP Status and Clear Lists"},
+			choice4 = T{NBWatch.StringIDBase + 26, "Close"},
+            image = "UI/Messages/death.tga",
         } -- params
         local choice = WaitPopupNotification(false, params)
         if choice == 1 then
@@ -394,13 +402,13 @@ function NWObituariesPopup2()
 	CreateRealTimeThread(function()
 		Sleep(5)
         params = {
-			title = T{"Martian Historical Records"},
-            text = T{"The Honored Fallen:  <newline> <NWFirstFourVIPs>", NWFirstFourVIPs = NWFirstFourVIPImport}, -- displays up to 5 dead VIPs info
-            choice1 = T{"Show Next Page of Fallen Martians"}, -- view and select each vip in order
-            choice2 = T{"View List of Current VIPs"},
-			choice3 = T{"Revoke VIP Status and Clear Lists"},
-			choice4 = T{"Close"},
-            image = "UI/Messages/research.tga",
+			title = T{NBWatch.StringIDBase + 27, "Martian Historical Records"},
+            text = T{NBWatch.StringIDBase + 28, "The Honored Fallen:  <newline> <NWFirstFourVIPs>", NWFirstFourVIPs = NWFirstFourVIPImport}, -- displays up to 5 dead VIPs info
+            choice1 = T{NBWatch.StringIDBase + 29, "Show Next Page of Fallen Martians"}, -- view and select each vip in order
+            choice2 = T{NBWatch.StringIDBase + 30, "View List of Current VIPs"},
+			choice3 = T{NBWatch.StringIDBase + 31, "Revoke VIP Status and Clear Lists"},
+			choice4 = T{NBWatch.StringIDBase + 26, "Close"},
+            image = "UI/Messages/death.tga",
         } -- params
         local choice = WaitPopupNotification(false, params)
         if choice == 1 then
@@ -423,13 +431,13 @@ function NWRevokeVIPPopup()
 	CreateRealTimeThread(function()
 		Sleep(5)
         params = {
-			title = T{"VIP Management:"},
-            text = T{"Choose from the options below to remove VIP status from individuals or from the records on a whole."},
-            choice1 = T{"Removes this colonist (<PotentialVIPNameCheck>) from the list of VIPs", PotentialVIPNameCheck = NWVIP.name}, -- view and select each vip in order
-            choice2 = T{"Reset list of VIPs only (leave the records of the dead)"},
-			choice3 = T{"Reset both the lists of living VIPs and Honored Fallen"},
-			choice4 = T{"Close"},
-            image = "UI/Messages/research.tga",
+			title = T{NBWatch.StringIDBase + 21, "VIP Management:"},
+            text = T{NBWatch.StringIDBase + 32, "Choose from the options below to remove VIP status from individuals or from the records on a whole."},
+            choice1 = T{NBWatch.StringIDBase + 33, "Removes this colonist (<PotentialVIPNameCheck>) from the list of VIPs", PotentialVIPNameCheck = NWVIP.name}, -- view and select each vip in order
+            choice2 = T{NBWatch.StringIDBase + 34, "Reset list of VIPs only (leave the records of the dead)"},
+			choice3 = T{NBWatch.StringIDBase + 35, "Reset both the lists of living VIPs and Honored Fallen"},
+			choice4 = T{NBWatch.StringIDBase + 26, "Close"},
+            image = "UI/Messages/statue.tga",
         } -- params
         local choice = WaitPopupNotification(false, params)
         if choice == 1 then
@@ -460,8 +468,8 @@ function NWRevokeVIPNotification()
 	NW_mod_dir = Mods["gzhD4pQ"]:GetModRootPath()
 	CreateRealTimeThread(function()
 		AddCustomOnScreenNotification("NWRevokeVIPNotification",
-			T{"VIP status has been revoked"},
-			T{"<NWRevokedVIPName> is no longer a VIP"},
+			T{NBWatch.StringIDBase + 36, "VIP status has been revoked"},
+			T{NBWatch.StringIDBase + 37, "<NWRevokedVIPName> is no longer a VIP"},
 			NW_mod_dir.."UI/NWVIPNotificationIcon.tga",
 			false,
 			{   NWRevokedVIPName = NWVIP.name,
@@ -475,7 +483,7 @@ function NWRevokeAllVIP()
 	for k in pairs (g_NWVIPList) do
 		g_NWVIPList[k] = nil
 	end
-	NWRevokeListDone = "VIP List has"
+	NWRevokeListDone = T{NBWatch.StringIDBase + 38, "VIP List has"}
 	NWRevokeAllConfirmation()
 	NWVariableSweep()
 end
@@ -484,8 +492,8 @@ function NWRevokeAllConfirmation()
 	NW_mod_dir = Mods["gzhD4pQ"]:GetModRootPath()
 	CreateRealTimeThread(function()
 		AddCustomOnScreenNotification("NWTrackVIP",
-			T{"Neighborhood Watch"},
-			T{"<NWRevokeListConfirmation> been reset"},
+			T{NBWatch.StringIDBase + 4, "Neighborhood Watch"},
+			T{NBWatch.StringIDBase + 39, "<NWRevokeListConfirmation> been reset"},
 			NW_mod_dir.."UI/NWVIPNotificationIcon.tga",
 			NWTrackVIPColonistCheck,
 			{
@@ -500,7 +508,7 @@ function NWRevokeDeaders()
 	for k in pairs (g_NWDeaderList) do
 		g_NWDeaderList[k] = nil
 	end
-	NWRevokeListDone = "Both lists have"
+	NWRevokeListDone = T{NBWatch.StringIDBase + 40, "Both lists have"}
 	NWRevokeAllConfirmation()
 	NWVariableSweep()
 end
@@ -543,30 +551,31 @@ function NWZoomFifth()
 end
 
 function NWShowThisColonistInfo()
+	NWCheckForEmptyList()
 	NWVIP = NWTempVIP
 	NWLivingVIPs = true
-	if NWGetThisColonistStats == "VIP not yet declared" then
-		NWGetThisColonistStats = "No colonist selected"
+	if NWColonistSelected then
+		NWGetThisColonistStats = NWGetVIPStats()
 	else
-	NWGetThisColonistStats = NWGetVIPStats()
+		NWGetThisColonistStats = T{NBWatch.StringIDBase + 41, "No colonist selected"}
 	end
-	if NWTempVIPName == nil then 
-		NWImportTrackVIPC1Text = "Select a colonist to add them as a VIP"
-		NWShowThisColRenameCheck = "Cannot rename colonist - none selected"
-	else
-		NWImportTrackVIPC1Text = NWTrackVIPTempText
-		NWShowThisColRenameCheck = "Rename selected colonist"
-	end
+--	if NWTempVIPName == nil then 
+		NWImportTrackVIPC1Text = T{NBWatch.StringIDBase + 42, "Select a colonist to add them as a VIP"}
+		NWShowThisColRenameCheck = T{NBWatch.StringIDBase + 43, "Cannot rename colonist - none selected"}
+--	else
+--		NWImportTrackVIPC1Text = NWTrackVIPTempText
+--		NWShowThisColRenameCheck = T{NBWatch.StringIDBase + 44, "Rename selected colonist"}
+--	end
 	CreateRealTimeThread(function()
        params = {
-			title = T{"A Potential VIP:"},
-	        text = T{"A Potential VIP:  <newline> <NWThisColonistStatShow>", NWThisColonistStatShow = NWGetThisColonistStats}, -- displays colonists' info
+			title = T{NBWatch.StringIDBase + 45, "A Potential VIP:"},
+	        text = T{NBWatch.StringIDBase + 46, "A Potential VIP:  <newline> <NWThisColonistStatShow>", NWThisColonistStatShow = NWGetThisColonistStats}, -- displays colonists' info
 	        choice1 = T{"<NWShowThisColonistC1Text>", NWShowThisColonistC1Text = NWImportTrackVIPC1Text}, -- choice1 = add this colonist to the table
 --			choice2 = T{"<NWShowThisColRenameChoice>", NWShowThisColRenameChoice = NWShowThisColRenameCheck},
-            choice2 = T{"View List of Current VIPs"},  -- shows VIP lists
-			choice3 = T{"View Records of the Honored Fallen"},  -- Shows obituaries
-			choice4 = T{"Close"},
-			image = "UI/Messages/research.tga",
+            choice2 = T{NBWatch.StringIDBase + 30, "View List of Current VIPs"},  -- shows VIP lists
+			choice3 = T{NBWatch.StringIDBase + 25, "View Records of the Honored Fallen"},  -- Shows obituaries
+			choice4 = T{NBWatch.StringIDBase + 26, "Close"},
+			image = "UI/Messages/colonists.tga",
        } -- close params
        local choice = WaitPopupNotification(false, params)
        if choice == 1 then
@@ -615,8 +624,8 @@ function NWConfirmExisting()
 	NW_mod_dir = Mods["gzhD4pQ"]:GetModRootPath()
 	CreateRealTimeThread(function()
 		AddCustomOnScreenNotification("NWTrackVIP",
-			T{"<NWNewVIPName> is already a VIP!"},
-			T{"Click here to manage VIPs"},
+			T{NBWatch.StringIDBase + 47, "<NWNewVIPName> is already a VIP!"},
+			T{NBWatch.StringIDBase + 5, "Click here to manage VIPs"},
 			NW_mod_dir.."UI/NWVIPNotificationIcon.tga",
 			NWTrackVIPColonistCheck,
 			{   NWNewVIPName = NWTempVIP.name,
@@ -631,8 +640,8 @@ function NWConfirmAddition()
 --	NW_mod_dir = debug.getinfo(1, "S").source:sub(2, -27)
 	CreateRealTimeThread(function()
 		AddCustomOnScreenNotification("NWTrackVIP",
-			T{"<NWNewVIPName> is now a VIP!"},
-			T{"Click here to manage VIPs"},
+			T{NBWatch.StringIDBase + 48, "<NWNewVIPName> is now a VIP!"},
+			T{NBWatch.StringIDBase + 5, "Click here to manage VIPs"},
 			NW_mod_dir.."UI/NWVIPNotificationIcon.tga",
 			NWTrackVIPColonistCheck,
 			{   NWNewVIPName = NWTempVIP.name,
