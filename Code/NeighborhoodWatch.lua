@@ -1,15 +1,31 @@
 NBWatch = {}
 NBWatch.StringIDBase = 987234920
 
--- function OnMsg.NewHour()
-function OnMsg.NewDay() -- in the final release this will be "OnMsg.NewDay()"
-	NWVariableSweep()
-	NWMainNotification()
+function OnMsg.NewMapLoaded()
+	NWColonistsHaveArrived = false
 end
 
-function OnMsg.RocketLanded(rocket)
+function OnMsg.SelectionChange()
+	if IsKindOfClasses(SelectedObj, "Colonist") then
+		NWVariableSweep()
+		NWColonistArrivedCheck()
+	end
+end
+
+function NWColonistArrivedCheck()
+	if UICity.labels.Colonist ~= nil then
+		NWMainNotification()
+	end
+	if NWColonistsHaveArrived == true then
+		NWColonistsHaveArrived = false
+		NWMainNotification()
+	end
+end
+
+function OnMsg.ColonistArrived()
+	NWColonistsHaveArrived = true
 	NWVariableSweep()
-	NWMainNotification()
+	NWColonistArrivedCheck()
 end
 
 function OnMsg.ColonistDied(colonist, reason)
@@ -50,7 +66,7 @@ function NWVIPDeathNotification()
 			NWVIPCenterOnDeader,
 			{   NWDeaderName = NWDeader.name,
 				NWDeaderReason = NWDeaderReasonChange,
-				expiration = 150000,
+				expiration = 75000,
 				priority = "Important",
 			})
 	end)
@@ -69,7 +85,7 @@ function NWMainNotification()
 			NW_mod_dir.."UI/NWVIPNotificationIcon.tga",
 			NWTrackVIPColonistCheck,
 			{
-				expiration = 200000,
+				expiration = 100000,
 				priority = "Normal",
 			})
 	end)
@@ -356,7 +372,7 @@ function NWCycleTheseVIPs()
 			NW_mod_dir.."UI/NWVIPNotificationIcon.tga",
 			NWZoomIndexer,
 			{
-				expiration = 500000,
+				expiration = 200000,
 				priority = "Normal",
 			})
 	end)
@@ -473,7 +489,7 @@ function NWRevokeVIPNotification()
 			NW_mod_dir.."UI/NWVIPNotificationIcon.tga",
 			false,
 			{   NWRevokedVIPName = NWVIP.name,
-				expiration = 50000,
+				expiration = 25000,
 				priority = "Normal",
 			})
 	end)
@@ -498,7 +514,7 @@ function NWRevokeAllConfirmation()
 			NWTrackVIPColonistCheck,
 			{
 				NWRevokeListConfirmation = NWRevokeListDone,
-				expiration = 10000,
+				expiration = 25000,
 				priority = "Normal",
 			})
 	end)
@@ -557,15 +573,15 @@ function NWShowThisColonistInfo()
 	if NWColonistSelected then
 		NWGetThisColonistStats = NWGetVIPStats()
 	else
-		NWGetThisColonistStats = T{NBWatch.StringIDBase + 41, "No colonist selected"}
+		NWGetThisColonistStats = T{NBWatch.StringIDBase + 41, "No colonist selected.<newline><newline>Click on a colonist to select them, then reopen this dialogue to add them as a VIP."}
 	end
---	if NWTempVIPName == nil then 
+	if NWTempVIPName == nil then 
 		NWImportTrackVIPC1Text = T{NBWatch.StringIDBase + 42, "Select a colonist to add them as a VIP"}
-		NWShowThisColRenameCheck = T{NBWatch.StringIDBase + 43, "Cannot rename colonist - none selected"}
---	else
---		NWImportTrackVIPC1Text = NWTrackVIPTempText
+--		NWShowThisColRenameCheck = T{NBWatch.StringIDBase + 43, "Cannot rename colonist - none selected"}
+	else
+		NWImportTrackVIPC1Text = NWTrackVIPTempText
 --		NWShowThisColRenameCheck = T{NBWatch.StringIDBase + 44, "Rename selected colonist"}
---	end
+	end
 	CreateRealTimeThread(function()
        params = {
 			title = T{NBWatch.StringIDBase + 45, "A Potential VIP:"},
